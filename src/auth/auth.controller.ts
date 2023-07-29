@@ -14,7 +14,7 @@ import { Response } from 'express'
 import { AuthService } from './auth.service'
 import { UserService } from 'users/users.service'
 import { User } from 'users/entites/user.entity'
-import { JwtAccessAuthGuard } from 'guard/jwt-access.guard'
+import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
 import { RefreshTokenDto } from './dtos/refresh-token.dto'
 import { JwtRefreshGuard } from './jwt-refresh.guard'
 import { SignupDto } from './dtos/signup.dto'
@@ -68,11 +68,10 @@ export class AuthController {
     }
   }
 
-  // ????????
   @Post('logout')
   @UseGuards(JwtRefreshGuard)
   async logout(@Req() req: any, @Res() res: Response): Promise<any> {
-    console.log('1---------1')
+    //
     await this.userService.removeRefreshToken(req.user.id)
     res.clearCookie('access_token')
     res.clearCookie('refresh_token')
@@ -85,7 +84,7 @@ export class AuthController {
   @UseGuards(JwtAccessAuthGuard)
   async user(@Req() req: any, @Res() res: Response): Promise<any> {
     const userId: number = req.user.id
-    console.log(userId)
+    console.log(req)
     const verifiedUser: User = await this.userService.findUserById(userId)
     return res.send(verifiedUser)
   }

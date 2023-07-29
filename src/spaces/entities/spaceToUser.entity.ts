@@ -15,6 +15,17 @@ export class SpaceToUser {
   @PrimaryGeneratedColumn()
   id: number
 
+  @Column({
+    comment: '소유자',
+    default: false,
+  })
+  owner: boolean
+
+  // @Column({
+  //   comment: '해당 유저가 속해있는 space의 역할',
+  // })
+  // spaceRoleId: number
+
   @Index()
   @Column('int', { name: 'UserId', nullable: true })
   UserId: number

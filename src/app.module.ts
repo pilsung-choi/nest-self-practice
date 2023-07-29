@@ -11,6 +11,8 @@ import { Space } from 'spaces/entities/space.entity'
 import { SpaceRole } from 'spaces/entities/spaceRole.entity'
 import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
 import { SpaceModule } from 'spaces/spaces.module'
+import { JwtModule } from '@nestjs/jwt'
+import { CommonModule } from './common/common.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -32,6 +34,7 @@ import { SpaceModule } from 'spaces/spaces.module'
           DB_NAME: Joi.string().required(),
         },
       ),
+      isGlobal: true,
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
@@ -48,6 +51,7 @@ import { SpaceModule } from 'spaces/spaces.module'
     UserModule,
     AuthModule,
     SpaceModule,
+    CommonModule,
   ],
 
   providers: [AppService],
