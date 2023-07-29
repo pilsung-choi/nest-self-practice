@@ -7,6 +7,10 @@ import { LoggerMiddleware } from 'logger/logger.middleware'
 import { User } from 'users/entites/user.entity'
 import { UserModule } from 'users/users.module'
 import { AuthModule } from 'auth/auth.module'
+import { Space } from 'spaces/entities/space.entity'
+import { SpaceRole } from 'spaces/entities/spaceRole.entity'
+import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
+import { SpaceModule } from 'spaces/spaces.module'
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,11 +42,12 @@ import { AuthModule } from 'auth/auth.module'
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
-      entities: [User],
+      entities: [User, Space, SpaceRole, SpaceToUser],
       //entities: ['src/**/*/entity.ts'],
     }),
     UserModule,
     AuthModule,
+    SpaceModule,
   ],
 
   providers: [AppService],

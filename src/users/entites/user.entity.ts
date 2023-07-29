@@ -1,11 +1,13 @@
+import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm'
 
-@Entity()
+@Entity({ schema: 'classum', name: 'user' })
 export class User {
   @PrimaryGeneratedColumn()
   id: number
@@ -44,6 +46,9 @@ export class User {
     comment: '회원 프로필 사진',
   })
   profile: string
+
+  @OneToMany(() => SpaceToUser, (spaceToUser) => spaceToUser.UserId)
+  SpaceToUser: SpaceToUser
 
   @Column({ nullable: true })
   currentRefreshToken: string
