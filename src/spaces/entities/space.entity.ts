@@ -33,10 +33,10 @@ export class Space {
   })
   spaceLogo: string
 
-  @Column({ comment: '관리자용 입장코드', unique: true })
+  @Column({ comment: '관리자용 입장코드', unique: true, select: false })
   adminAccessCode: string
 
-  @Column({ comment: '참여자용 입장코드', unique: true })
+  @Column({ comment: '참여자용 입장코드', unique: true, select: false })
   participantAccessCode: string
 
   @OneToMany(() => SpaceToUser, (spaceToUser) => spaceToUser.SpaceId)

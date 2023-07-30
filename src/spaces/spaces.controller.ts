@@ -21,12 +21,28 @@ export class SpaceController {
 
   // 공간 계설 -> 1.1참고
   @UseGuards(JwtAccessAuthGuard)
-  @Post('/test')
+  @Post('/space')
   async createSpacet(@Req() req: any, @Body() createSpaceDto: CreateSpaceDto) {
     // 1. 공간을 만든다
     const { id } = req.user
 
     return this.spaceService.createSpace(createSpaceDto, id)
+  }
+
+  @UseGuards(JwtAccessAuthGuard)
+  @Get('/space')
+  async getMySpaces(@Req() req: any) {
+    const { id } = req.user
+
+    return this.spaceService.getMySpacesfromId(id)
+    // useru {
+    //   id: 1,
+    //   email: 'vlftjd159753@gmail.com',
+    //   firstName: '필성',
+    //   lastName: '최',
+    //   iat: 1690727028,
+    //   exp: 1690730628
+    // }
   }
 
   //   @Post('/join-room')

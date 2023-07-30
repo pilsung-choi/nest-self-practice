@@ -1,18 +1,17 @@
 import {
   ConflictException,
-  HttpException,
-  HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Space } from './entities/space.entity'
-import { Repository, getConnection } from 'typeorm'
-import { CreateSpaceDto } from './dtos/create-space.dto'
-import { CheckCodeFromSpaceDto } from './dtos/check-code.dto'
-import { SpaceToUser } from './entities/spaceToUser.entity'
-import { ResponseType } from 'common/response-type'
 import { nanoid } from 'nanoid'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository, getConnection } from 'typeorm'
+
+import { SpaceToUser } from './entities/spaceToUser.entity'
 import { SpaceRole } from './entities/spaceRole.entity'
+import { Space } from './entities/space.entity'
+import { CreateSpaceDto } from './dtos/create-space.dto'
+import { ResponseType } from 'common/response-type'
 
 @Injectable()
 export class SpaceService {
@@ -25,7 +24,10 @@ export class SpaceService {
     private spaceRole: Repository<SpaceRole>,
   ) {}
 
-  async createSpace(createSpaceDto: CreateSpaceDto, id: number): Promise<any> {
+  async createSpace(
+    createSpaceDto: CreateSpaceDto,
+    id: number,
+  ): Promise<ResponseType> {
     const adminAccessCode = nanoid(8)
     const participantAccessCode = nanoid(8)
 
@@ -78,19 +80,22 @@ export class SpaceService {
     }
   }
 
-  //     private generateAccessCode(): string {
+  async getMySpacesfromId(id: number): Promise<SpaceToUser[]> {
+    const spaceToUserAlias = 'spaceToUser'
+    const spaceAlias = 'space'
 
-  //     const codeLength = 8
-  //     const characters =
-  //       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  //     let code = ''
-  //     console.log(characters.length)
-  //     for (let i = 0; i < codeLength; i++) {
-  //       const randomIndex = Math.floor(Math.random() * characters.length)
-  //       code += characters[randomIndex]
-  //     }
-  //     return code
-  //   }
+    const spaces = await this.spaceToUserRepo
+      .createQueryBuilder(`spaceToUser`)
+      .leftJoinAndSelect('spaceToUser.Space', 'SpaceId')
+      .where('spaceToUser.UserId = :userId', { userId: id })
+      .getMany()
+
+    if (!spaces) {
+      throw new NotFoundException("space dosen't exit")
+    }
+
+    return spaces
+  }
 
   private async checkCodeFromSpace(
     adminCode: string,
