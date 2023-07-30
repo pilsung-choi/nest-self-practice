@@ -11,6 +11,7 @@ import { SpaceToUser } from './entities/spaceToUser.entity'
 import { SpaceRole } from './entities/spaceRole.entity'
 import { Space } from './entities/space.entity'
 import { CreateSpaceDto } from './dtos/create-space.dto'
+import { ParticipationDto } from './dtos/participation.dto'
 import { ResponseType } from 'common/response-type'
 
 @Injectable()
@@ -97,6 +98,31 @@ export class SpaceService {
     return spaces
   }
 
+  async getRoleFromSpaceWithCode(code: string): Promise<ResponseType> {
+    // 코드가 맞는 공간 가져오기
+    const param = [code, code, code, code]
+    const query = await getConnection().query(
+      `
+        SELECT 
+          CASE 
+              WHEN s.adminAccessCode = ? THEN sr_admin.spaceRoleName
+              WHEN s.participantAccessCode = ? THEN sr_participant.spaceRoleName
+          END AS role
+        FROM space s
+        LEFT JOIN \`space-role\` sr_admin ON sr_admin.SpaceId = s.id AND sr_admin.role = 'admin'
+        LEFT JOIN \`space-role\` sr_participant ON sr_participant.SpaceId = s.id AND sr_participant.role = 'participant'
+        WHERE s.adminAccessCode = ? OR s.participantAccessCode = ? ;
+          `,
+      param,
+    )
+    const res = query.map((q) => q.role)
+    return res
+  }
+
+  async joinSpace(id: string, pInfo: ParticipationDto) {
+    //
+  }
+
   private async checkCodeFromSpace(
     adminCode: string,
     participantCode: string,
@@ -114,3 +140,13 @@ export class SpaceService {
       .getOne()
   }
 }
+
+// SELECT
+// CASE
+//     WHEN s.adminAccessCode = 'w73Jh9Yc' THEN sr_admin.spaceRoleName
+//     WHEN s.participantAccessCode = 'w73Jh9Yc' THEN sr_participant.spaceRoleName
+// END AS result
+// FROM space s
+// LEFT JOIN `space-role` sr_admin ON sr_admin.SpaceId = s.id AND sr_admin.role = 'admin'
+// LEFT JOIN `space-role` sr_participant ON sr_participant.SpaceId = s.id AND sr_participant.role = 'participant'
+// WHERE s.adminAccessCode = 'w73Jh9Yc' OR s.participantAccessCode = 'w73Jh9Yc' ;

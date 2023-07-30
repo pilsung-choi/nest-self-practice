@@ -21,10 +21,10 @@ export class SpaceToUser {
   })
   owner: boolean
 
-  // @Column({
-  //   comment: '해당 유저가 속해있는 space의 역할',
-  // })
-  // spaceRoleId: number
+  @Column({
+    comment: '해당 유저가 속해있는 space의 역할',
+  })
+  spaceRoleNmae: string
 
   @Index()
   @Column('int', { name: 'UserId', nullable: true })

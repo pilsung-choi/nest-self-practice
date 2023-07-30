@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
 import { CreateSpaceDto } from './dtos/create-space.dto'
 import { SpaceService } from './spaces.service'
+import { ParticipationDto } from './dtos/participation.dto'
 
 @Controller('space')
 export class SpaceController {
@@ -21,28 +31,37 @@ export class SpaceController {
 
   // 공간 계설 -> 1.1참고
   @UseGuards(JwtAccessAuthGuard)
-  @Post('/space')
+  @Post('')
   async createSpacet(@Req() req: any, @Body() createSpaceDto: CreateSpaceDto) {
-    // 1. 공간을 만든다
     const { id } = req.user
 
     return this.spaceService.createSpace(createSpaceDto, id)
   }
 
+  // 해당 유저가 속해있는 space조회
   @UseGuards(JwtAccessAuthGuard)
-  @Get('/space')
+  @Get('/myspace')
   async getMySpaces(@Req() req: any) {
     const { id } = req.user
 
     return this.spaceService.getMySpacesfromId(id)
-    // useru {
-    //   id: 1,
-    //   email: 'vlftjd159753@gmail.com',
-    //   firstName: '필성',
-    //   lastName: '최',
-    //   iat: 1690727028,
-    //   exp: 1690730628
-    // }
+  }
+
+  // code입력 후, 해당 권한에 맞는 역할 조회
+  @UseGuards(JwtAccessAuthGuard)
+  @Get('')
+  async checkRoleFromCode(@Query('code') code: string) {
+    return this.spaceService.getRoleFromSpaceWithCode(code)
+  }
+
+  @UseGuards(JwtAccessAuthGuard)
+  @Post('/participation')
+  async participateSpace(
+    @Req() req: any,
+    @Body() participationDto: ParticipationDto,
+  ) {
+    const { id } = req.user
+    return this.spaceService.joinSpace(id, participationDto)
   }
 
   //   @Post('/join-room')
