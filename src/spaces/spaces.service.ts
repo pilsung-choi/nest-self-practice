@@ -13,6 +13,7 @@ import { Space } from './entities/space.entity'
 import { CreateSpaceDto } from './dtos/create-space.dto'
 import { ParticipationDto } from './dtos/participation.dto'
 import { ResponseType } from 'common/response-type'
+import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
 
 @Injectable()
 export class SpaceService {
@@ -22,9 +23,12 @@ export class SpaceService {
     @InjectRepository(SpaceToUser)
     private spaceToUserRepo: Repository<SpaceToUser>,
     @InjectRepository(SpaceParticipantRole)
-    private spaceRole: Repository<SpaceParticipantRole>,
+    private spaceParticipantRole: Repository<SpaceParticipantRole>,
+    @InjectRepository(SpaceAdminRole)
+    private spaceAdminRole: Repository<SpaceAdminRole>,
   ) {}
 
+  // 에러처리 해야함 space는 insert됨
   async createSpace(
     createSpaceDto: CreateSpaceDto,
     id: number,
@@ -45,6 +49,9 @@ export class SpaceService {
     await queryRunner.startTransaction()
 
     try {
+      // 1. space를 만든다 0
+      // 2. spaceToUser 만든다 0
+      // 3. 역할에 따른 Role 만든다
       const spaceInfo = this.spaceRepo.create()
       spaceInfo.spaceName = createSpaceDto.spaceName
       spaceInfo.spaceLogo = createSpaceDto.spaceLogo
@@ -60,18 +67,26 @@ export class SpaceService {
 
       await this.spaceToUserRepo.save(spaceToUserInfo)
 
-      const spaceRoleInfo = this.spaceRole.create()
+      const spaceRoleInfo = this.spaceParticipantRole.create()
       spaceRoleInfo.SpaceId = space.id
 
       createSpaceDto.spaceRole.map(async (spaceRole) => {
-        const spaceRoleInfo = this.spaceRole.create()
-        spaceRoleInfo.role = spaceRole.Role
-        spaceRoleInfo.spaceRoleName = spaceRole.spaceRoleName
-        spaceRoleInfo.SpaceId = space.id
-
-        await this.spaceRole.save(spaceRoleInfo)
+        let admin: SpaceAdminRole
+        let participant: SpaceParticipantRole
+        if (spaceRole.Role === 'admin') {
+          admin = this.spaceAdminRole.create()
+          admin.SpaceId = space.id
+          admin.spaceRoleName = spaceRole.spaceRoleName
+          admin.role = spaceRole.Role
+          await this.spaceAdminRole.save(admin)
+        } else {
+          participant = this.spaceParticipantRole.create()
+          participant.SpaceId = space.id
+          participant.spaceRoleName = spaceRole.spaceRoleName
+          participant.role = spaceRole.Role
+          await this.spaceParticipantRole.save(participant)
+        }
       })
-
       await queryRunner.commitTransaction()
       return
     } catch (err) {
@@ -82,9 +97,6 @@ export class SpaceService {
   }
 
   async getMySpacesfromId(id: number): Promise<SpaceToUser[]> {
-    const spaceToUserAlias = 'spaceToUser'
-    const spaceAlias = 'space'
-
     const spaces = await this.spaceToUserRepo
       .createQueryBuilder(`spaceToUser`)
       .leftJoinAndSelect('spaceToUser.Space', 'SpaceId')
@@ -100,22 +112,26 @@ export class SpaceService {
 
   async getRoleFromSpaceWithCode(code: string): Promise<ResponseType> {
     // 코드가 맞는 공간 가져오기
-    const param = [code, code, code, code]
-    const query = await getConnection().query(
+    const param = [code, code]
+    const spaces = await getConnection().query(
       `
-    SELECT 
-    CASE 
-      // WHEN s.adminAccessCode = ?  THEN sr.spaceRoleName
-      // WHEN s.participantAccessCode = ? THEN sr.spaceRoleName
-    END AS result
-    FROM space s
-    LEFT JOIN \`space-role\` sr ON sr.SpaceId = s.id 
-    // // WHERE s.adminAccessCode = ? OR s.participantAccessCode = ?;
-      `,
+    select sdr.spaceRoleName as name, sdr.role as role
+    from space s
+    left join \`space-admin-role\` sdr on sdr.SpaceId = s.id
+    where s.adminAccessCode = ?
+    union
+    select spr.spaceRoleName as name, spr.role as role
+    from space s
+    left join \`space-participant-role\` spr on spr.SpaceId = s.id
+    where s.participantAccessCode = ?
+    `,
       param,
     )
-    const res = query.map((q) => q.role)
-    return res
+
+    if (spaces.length === 0) {
+      throw new NotFoundException('유효하지 않은 코드입니다.')
+    }
+    return spaces
   }
 
   async joinSpace(id: string, pInfo: ParticipationDto) {
