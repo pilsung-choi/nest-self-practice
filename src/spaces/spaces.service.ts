@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, getConnection } from 'typeorm'
 
 import { SpaceToUser } from './entities/spaceToUser.entity'
-import { SpaceRole } from './entities/spaceRole.entity'
+import { SpaceParticipantRole } from './entities/spaceParticipantRole.entity'
 import { Space } from './entities/space.entity'
 import { CreateSpaceDto } from './dtos/create-space.dto'
 import { ParticipationDto } from './dtos/participation.dto'
@@ -21,8 +21,8 @@ export class SpaceService {
     private spaceRepo: Repository<Space>,
     @InjectRepository(SpaceToUser)
     private spaceToUserRepo: Repository<SpaceToUser>,
-    @InjectRepository(SpaceRole)
-    private spaceRole: Repository<SpaceRole>,
+    @InjectRepository(SpaceParticipantRole)
+    private spaceRole: Repository<SpaceParticipantRole>,
   ) {}
 
   async createSpace(
@@ -103,16 +103,15 @@ export class SpaceService {
     const param = [code, code, code, code]
     const query = await getConnection().query(
       `
-        SELECT 
-          CASE 
-              WHEN s.adminAccessCode = ? THEN sr_admin.spaceRoleName
-              WHEN s.participantAccessCode = ? THEN sr_participant.spaceRoleName
-          END AS role
-        FROM space s
-        LEFT JOIN \`space-role\` sr_admin ON sr_admin.SpaceId = s.id AND sr_admin.role = 'admin'
-        LEFT JOIN \`space-role\` sr_participant ON sr_participant.SpaceId = s.id AND sr_participant.role = 'participant'
-        WHERE s.adminAccessCode = ? OR s.participantAccessCode = ? ;
-          `,
+    SELECT 
+    CASE 
+      // WHEN s.adminAccessCode = ?  THEN sr.spaceRoleName
+      // WHEN s.participantAccessCode = ? THEN sr.spaceRoleName
+    END AS result
+    FROM space s
+    LEFT JOIN \`space-role\` sr ON sr.SpaceId = s.id 
+    // // WHERE s.adminAccessCode = ? OR s.participantAccessCode = ?;
+      `,
       param,
     )
     const res = query.map((q) => q.role)

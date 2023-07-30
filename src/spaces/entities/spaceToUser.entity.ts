@@ -10,6 +10,11 @@ import {
 import { User } from 'users/entites/user.entity'
 import { Space } from './space.entity'
 
+export enum Role {
+  Participant = 'participant',
+  Admin = 'admin',
+}
+
 @Entity({ schema: 'classum', name: 'space-to-user' })
 export class SpaceToUser {
   @PrimaryGeneratedColumn()
@@ -23,6 +28,11 @@ export class SpaceToUser {
 
   @Column({
     comment: '해당 유저가 속해있는 space의 역할',
+  })
+  role: Role
+
+  @Column({
+    comment: '해당 유저가 속해있는 space의 역할이름',
   })
   spaceRoleNmae: string
 

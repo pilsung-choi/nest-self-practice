@@ -8,11 +8,12 @@ import { User } from 'users/entites/user.entity'
 import { UserModule } from 'users/users.module'
 import { AuthModule } from 'auth/auth.module'
 import { Space } from 'spaces/entities/space.entity'
-import { SpaceRole } from 'spaces/entities/spaceRole.entity'
+import { SpaceParticipantRole } from 'spaces/entities/spaceParticipantRole.entity'
 import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
 import { SpaceModule } from 'spaces/spaces.module'
 import { JwtModule } from '@nestjs/jwt'
-import { CommonModule } from './common/common.module';
+import { CommonModule } from './common/common.module'
+import { SpaceAdminRole } from 'spaces/entities/spaceAdminRole.entity'
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -45,7 +46,14 @@ import { CommonModule } from './common/common.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
-      entities: [User, Space, SpaceRole, SpaceToUser],
+      entities: [
+        User,
+        Space,
+        SpaceParticipantRole,
+        SpaceAdminRole,
+        SpaceAdminRole,
+        SpaceToUser,
+      ],
       //entities: ['src/**/*/entity.ts'],
     }),
     UserModule,

@@ -13,15 +13,20 @@ export enum Role {
   Admin = 'admin',
 }
 
-@Entity({ schema: 'classum', name: 'space-role' })
-export class SpaceRole {
+@Entity({ schema: 'classum', name: 'space-participant-role' })
+export class SpaceParticipantRole {
   @PrimaryGeneratedColumn()
   id: number
 
   @Column({ comment: '역할 이름' })
   spaceRoleName: string
 
-  @Column({ type: 'enum', enum: Role, comment: '역할 권한' })
+  @Column({
+    type: 'enum',
+    enum: Role,
+    comment: '역할 권한',
+    default: 'participant',
+  })
   role: Role
 
   @Index()

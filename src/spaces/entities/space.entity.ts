@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm'
 import { SpaceToUser } from './spaceToUser.entity'
-import { SpaceRole } from './spaceRole.entity'
+import { SpaceParticipantRole } from './spaceParticipantRole.entity'
 
 @Entity({ schema: 'classum', name: 'space' })
 export class Space {
@@ -42,8 +42,8 @@ export class Space {
   @OneToMany(() => SpaceToUser, (spaceToUser) => spaceToUser.SpaceId)
   SpaceToUser: SpaceToUser
 
-  @OneToMany(() => SpaceRole, (spaceRole) => spaceRole.id)
-  SpaceRole: SpaceRole
+  @OneToMany(() => SpaceParticipantRole, (spacePRole) => spacePRole.id)
+  SpacePRole: SpaceParticipantRole
 
   // @OneToMany(() => Post, (post) => post.id)
   // 매핑 테이블
