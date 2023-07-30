@@ -12,6 +12,7 @@ import { CheckCodeFromSpaceDto } from './dtos/check-code.dto'
 import { SpaceToUser } from './entities/spaceToUser.entity'
 import { ResponseType } from 'common/response-type'
 import { nanoid } from 'nanoid'
+import { SpaceRole } from './entities/spaceRole.entity'
 
 @Injectable()
 export class SpaceService {
@@ -20,6 +21,8 @@ export class SpaceService {
     private spaceRepo: Repository<Space>,
     @InjectRepository(SpaceToUser)
     private spaceToUserRepo: Repository<SpaceToUser>,
+    @InjectRepository(SpaceRole)
+    private spaceRole: Repository<SpaceRole>,
   ) {}
 
   async createSpace(createSpaceDto: CreateSpaceDto, id: number): Promise<any> {
@@ -34,6 +37,7 @@ export class SpaceService {
     if (checkCode) {
       throw new ConflictException('already exit space access-code')
     }
+
     const queryRunner = getConnection().createQueryRunner()
     await queryRunner.startTransaction()
 
@@ -51,7 +55,19 @@ export class SpaceService {
       spaceToUserInfo.UserId = id
       spaceToUserInfo.SpaceId = space.id
 
-      const spaceToUser = await this.spaceToUserRepo.save(spaceToUserInfo)
+      await this.spaceToUserRepo.save(spaceToUserInfo)
+
+      const spaceRoleInfo = this.spaceRole.create()
+      spaceRoleInfo.SpaceId = space.id
+
+      createSpaceDto.spaceRole.map(async (spaceRole) => {
+        const spaceRoleInfo = this.spaceRole.create()
+        spaceRoleInfo.role = spaceRole.Role
+        spaceRoleInfo.spaceRoleName = spaceRole.spaceRoleName
+        spaceRoleInfo.SpaceId = space.id
+
+        await this.spaceRole.save(spaceRoleInfo)
+      })
 
       await queryRunner.commitTransaction()
       return

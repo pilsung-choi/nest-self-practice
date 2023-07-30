@@ -12,5 +12,5 @@ export class CreateSpaceRoleDto {
 
   @IsNotEmpty()
   @IsEnum(Role)
-  Role: string
+  Role: Role
 }

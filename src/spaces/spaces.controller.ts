@@ -21,13 +21,6 @@ export class SpaceController {
 
   // 공간 계설 -> 1.1참고
   @UseGuards(JwtAccessAuthGuard)
-  @Get('/test')
-  async createSpace(@Req() req: any) {
-    // console.log('-------------')
-    // console.log(req)
-  }
-
-  @UseGuards(JwtAccessAuthGuard)
   @Post('/test')
   async createSpacet(@Req() req: any, @Body() createSpaceDto: CreateSpaceDto) {
     // 1. 공간을 만든다
