@@ -28,16 +28,18 @@ export class SpaceToUser {
 
   @Column({
     comment: '해당 유저가 속해있는 space의 역할',
+    nullable: true,
   })
   role: Role
 
   @Column({
     comment: '해당 유저가 속해있는 space의 역할이름',
+    nullable: true,
   })
   spaceRoleNmae: string
 
   @Index()
-  @Column('int', { name: 'UserId', nullable: true })
+  @Column('int', { name: 'UserId' })
   UserId: number
 
   @ManyToOne(() => User, (user) => user.id)
@@ -45,7 +47,7 @@ export class SpaceToUser {
   User: User[]
 
   @Index()
-  @Column('int', { name: 'SpaceId', nullable: true })
+  @Column('int', { name: 'SpaceId' })
   SpaceId: number
 
   @ManyToOne(() => Space, (space) => space.id)
