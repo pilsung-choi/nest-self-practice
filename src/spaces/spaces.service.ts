@@ -1,12 +1,14 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common'
 import { nanoid } from 'nanoid'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, getConnection } from 'typeorm'
+import { Repository, UpdateDateColumn, getConnection } from 'typeorm'
 
 import { SpaceToUser } from './entities/spaceToUser.entity'
 import { SpaceParticipantRole } from './entities/spaceParticipantRole.entity'
@@ -14,7 +16,11 @@ import { Space } from './entities/space.entity'
 import { CreateSpaceDto } from './dtos/create-space.dto'
 import { ResponseType } from 'common/response-type'
 import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
-import { ParticipationDto } from './dtos/space-role.dto'
+import {
+  ParticipationDto,
+  SpaceRoleDto,
+  UpdateRoleFromOwnerDto,
+} from './dtos/space-role.dto'
 
 @Injectable()
 export class SpaceService {
@@ -164,6 +170,42 @@ export class SpaceService {
     } catch (err) {
       this.logger.error('something went wrong')
     }
+    return
+  }
+
+  async updateRole(id: string, updateInfo: UpdateRoleFromOwnerDto) {
+    // 1. 해당 유저가 소유자인지 확인한다.
+    // 2. 소유자가 맞다면 update의 id에 해당하는 유저의 Role을 수정
+    const checkOwner = await this.spaceToUserRepo
+      .createQueryBuilder('spaceToUser')
+      .where('spaceToUser.UserId = :userId', { userId: id })
+      .andWhere('spaceToUser.SpaceId = :spaceId', {
+        spaceId: updateInfo.spaceId,
+      })
+      .select('spaceToUser.owner')
+      .getOne()
+    console.log(checkOwner)
+
+    if (!checkOwner.owner) {
+      throw new HttpException(
+        '해당 space의 소유자가 아닙니다.',
+        HttpStatus.FORBIDDEN,
+      )
+    }
+    console.log('-----', updateInfo.userId, updateInfo.spaceId)
+
+    await this.spaceToUserRepo
+      .createQueryBuilder('space-to-user')
+      .update()
+      .set({
+        role: updateInfo.Role,
+        updatedAt: () => 'NOW()',
+      })
+      .where('`space-to-user`.UserId = :UserId', { UserId: updateInfo.userId })
+      .andWhere('`space-to-user`.SpaceId = :spaceId', {
+        spaceId: updateInfo.spaceId,
+      })
+      .execute()
     return
   }
 

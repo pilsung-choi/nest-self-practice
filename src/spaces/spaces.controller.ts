@@ -13,7 +13,11 @@ import {
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
 import { SpaceService } from './spaces.service'
 import { CreateSpaceDto } from './dtos/create-space.dto'
-import { ParticipationDto, SpaceRoleDto } from './dtos/space-role.dto'
+import {
+  ParticipationDto,
+  SpaceRoleDto,
+  UpdateRoleFromOwnerDto,
+} from './dtos/space-role.dto'
 
 @Controller('space')
 export class SpaceController {
@@ -74,8 +78,12 @@ export class SpaceController {
   @Patch('')
   async updateRoleFromOwner(
     @Req() req: any,
-    @Body() updateRoleInfo: SpaceRoleDto,
-  ) {}
+    @Body() updateRoleInfo: UpdateRoleFromOwnerDto,
+  ) {
+    const { id } = req.user
+    this.spaceService.updateRole(id, updateRoleInfo)
+  }
+
   // space삭제 (소유자만)
 
   // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.
