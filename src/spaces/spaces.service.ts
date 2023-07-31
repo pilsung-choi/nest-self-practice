@@ -10,16 +10,17 @@ import { nanoid } from 'nanoid'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, UpdateDateColumn, getConnection } from 'typeorm'
 
-import { SpaceToUser } from './entities/spaceToUser.entity'
-import { SpaceParticipantRole } from './entities/spaceParticipantRole.entity'
-import { Space } from './entities/space.entity'
-import { CreateSpaceDto } from './dtos/create-space.dto'
 import { ResponseType } from 'common/response-type'
+import { Space } from './entities/space.entity'
+import { SpaceToUser } from './entities/spaceToUser.entity'
 import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
+import { SpaceParticipantRole } from './entities/spaceParticipantRole.entity'
+import { CreateSpaceDto } from './dtos/create-space.dto'
+import { deleteSpaceDto } from './dtos/delete-space.dto'
 import {
   ParticipationDto,
-  SpaceRoleDto,
   UpdateRoleFromOwnerDto,
+  UpdateUserToOwnerDto,
 } from './dtos/space-role.dto'
 
 @Injectable()
@@ -36,7 +37,7 @@ export class SpaceService {
   ) {}
   private readonly logger = new Logger('space')
 
-  // 에러처리 해야함 space는 insert됨
+  // 에러처리 해야함 space는 insert됨, 중복처리?
   async createSpace(
     createSpaceDto: CreateSpaceDto,
     id: number,
@@ -124,15 +125,15 @@ export class SpaceService {
     const param = [code, code]
     const spaces = await getConnection().query(
       `
-    select s.id, sdr.spaceRoleName as name, sdr.role as role
-    from space s
-    left join \`space-admin-role\` sdr on sdr.SpaceId = s.id
-    where s.adminAccessCode = ?
-    union
-    select s.id, spr.spaceRoleName as name, spr.role as role
-    from space s
-    left join \`space-participant-role\` spr on spr.SpaceId = s.id
-    where s.participantAccessCode = ?
+    SELECT s.id, sdr.spaceRoleName AS name, sdr.role AS role
+    FROM space s
+    LEFT JOIN \`space-admin-role\` sdr ON sdr.SpaceId = s.id
+    WHERE s.adminAccessCode = ?
+    uniON
+    SELECT s.id, spr.spaceRoleName AS name, spr.role AS role
+    FROM space s
+    LEFT JOIN \`space-participant-role\` spr ON spr.SpaceId = s.id
+    WHERE s.participantAccessCode = ?
     `,
       param,
     )
@@ -184,7 +185,6 @@ export class SpaceService {
       })
       .select('spaceToUser.owner')
       .getOne()
-    console.log(checkOwner)
 
     if (!checkOwner.owner) {
       throw new HttpException(
@@ -192,7 +192,6 @@ export class SpaceService {
         HttpStatus.FORBIDDEN,
       )
     }
-    console.log('-----', updateInfo.userId, updateInfo.spaceId)
 
     await this.spaceToUserRepo
       .createQueryBuilder('space-to-user')
@@ -207,6 +206,97 @@ export class SpaceService {
       })
       .execute()
     return
+  }
+
+  // 쿼리 개션 가능한가?
+  async deleteSpace(id: number, spaceId: deleteSpaceDto) {
+    // 1.  해당 유저가 소유자인지 확인
+    // 2. 소유자가 아니면 에러
+    // 3. 해당 space와 spaceRole,spaceToUser soft delete
+    const { owner } = await this.spaceToUserRepo
+      .createQueryBuilder('spaceToUser')
+      .where('spaceToUser.UserId = :userId', { userId: id })
+      .andWhere('spaceToUser.SpaceId = :spaceId', { spaceId: spaceId.spaceId })
+      .select('spaceToUser.owner')
+      .getOne()
+
+    if (!owner) {
+      throw new HttpException(
+        '해당 space의 소유주가 아닙니다',
+        HttpStatus.FORBIDDEN,
+      )
+    }
+    const param = [spaceId.spaceId]
+    const deleteRes = await getConnection().query(
+      `
+      UPDATE space AS s
+      LEFT JOIN \`space-admin-role\` AS sar ON sar.SpaceId = s.id
+      LEFT JOIN \`space-participant-role\` AS spr ON spr.SpaceId = s.id
+      LEFT JOIN \`space-to-user\` AS stu ON stu.SpaceId = s.id
+      SET 
+      s.deletedAt = now(),
+      sar.deletedAt = now(),
+      spr.deletedAt = now(),
+      stu.deletedAt = now()
+      where s.id = ? and s.deletedAt is null;
+      `,
+      param,
+    )
+
+    // 트랜잭션 걸어야 하나?
+    // "data": {
+    //   "fieldCount": 0,
+    //   "affectedRows": 6,
+    //   "insertId": 0,
+    //   "info": "Rows matched: 6  Changed: 6  Warnings: 0",
+    //   "serverStatus": 2,
+    //   "warningStatus": 0,
+    //   "changedRows": 6
+    // },
+    return '성공적으로 삭제'
+  }
+
+  async updateOwner(id: number, targetUser: UpdateUserToOwnerDto) {
+    const owner = await this.spaceToUserRepo
+      .createQueryBuilder('spaceToUser')
+      .where('spaceToUser.UserId = :userId', { userId: id })
+      .andWhere('spaceToUser.SpaceId = :spaceId', {
+        spaceId: targetUser.spaceId,
+      })
+      .select('spaceToUser.owner')
+      .getOne()
+    // 삭제된 space면 다른 에러를 던져야함
+    console.log(owner)
+
+    if (!owner) {
+      throw new HttpException(
+        '해당 space의 소유주가 아닙니다',
+        HttpStatus.FORBIDDEN,
+      )
+    }
+
+    const res = await this.spaceToUserRepo
+      .createQueryBuilder('space-to-user')
+      .update()
+      .set({
+        owner: true,
+        updatedAt: () => 'NOW()',
+      })
+      .where('`space-to-user`.UserId = :userId', { userId: targetUser.userId })
+      .andWhere('`space-to-user`.SpaceId = :spaceId', {
+        spaceId: targetUser.spaceId,
+      })
+      .execute()
+
+    // 변경이 안돼도 넘어감 에러처리 필요
+    if (res.affected === 0) {
+      throw new HttpException(
+        '소유자로 변경된 유저가 없습니다',
+        HttpStatus.AMBIGUOUS,
+      )
+    }
+
+    return '성공적으로 업데이트됨'
   }
 
   private async checkCodeFromSpace(

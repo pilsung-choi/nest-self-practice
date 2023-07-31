@@ -34,3 +34,13 @@ export class UpdateRoleFromOwnerDto {
   @IsEnum(Role)
   Role: Role
 }
+
+export class UpdateUserToOwnerDto {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  spaceId: number
+}

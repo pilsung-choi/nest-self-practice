@@ -16,9 +16,10 @@ import { SpaceService } from './spaces.service'
 import { CreateSpaceDto } from './dtos/create-space.dto'
 import {
   ParticipationDto,
-  SpaceRoleDto,
   UpdateRoleFromOwnerDto,
+  UpdateUserToOwnerDto,
 } from './dtos/space-role.dto'
+import { deleteSpaceDto } from './dtos/delete-space.dto'
 
 @Controller('space')
 export class SpaceController {
@@ -82,13 +83,26 @@ export class SpaceController {
     @Body() updateRoleInfo: UpdateRoleFromOwnerDto,
   ) {
     const { id } = req.user
-    this.spaceService.updateRole(id, updateRoleInfo)
+    return this.spaceService.updateRole(id, updateRoleInfo)
   }
 
   // space삭제 (소유자만)
   @UseGuards(JwtAccessAuthGuard)
-  @Delete('')
-  async deleteSpace() {}
+  @Delete('/:spaceId')
+  async deleteSpace(@Req() req: any, @Param() spaceId: deleteSpaceDto) {
+    const { id } = req.user
+
+    return this.spaceService.deleteSpace(id, spaceId)
+  }
 
   // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.
+  @UseGuards(JwtAccessAuthGuard)
+  @Patch('/owner')
+  async updateOwnerFromOwner(
+    @Req() req: any,
+    @Body() targetUser: UpdateUserToOwnerDto,
+  ) {
+    const { id } = req.user
+    return this.spaceService.updateOwner(id, targetUser)
+  }
 }

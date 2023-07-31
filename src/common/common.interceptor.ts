@@ -12,6 +12,7 @@ export class CommonInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         console.log(data)
+        console.log('CommonInterceptor')
         return { data, success: true }
       }),
     )
