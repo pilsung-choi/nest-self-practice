@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -19,6 +20,15 @@ export enum Role {
 export class SpaceToUser {
   @PrimaryGeneratedColumn()
   id: number
+
+  @CreateDateColumn()
+  createdAt: Date
+
+  @CreateDateColumn()
+  updatedAt: Date
+
+  @CreateDateColumn()
+  deletedAt: Date
 
   @Column({
     comment: '소유자',
