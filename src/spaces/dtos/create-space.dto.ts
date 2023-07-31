@@ -8,7 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator'
-import { CreateSpaceRoleDto } from './space-role.dto'
+import { SpaceRoleDto } from './space-role.dto'
 
 export class CreateSpaceDto {
   @IsString()
@@ -23,6 +23,6 @@ export class CreateSpaceDto {
   @ArrayMinSize(1)
   @ArrayMaxSize(5)
   @ValidateNested({ each: true })
-  @Type(() => CreateSpaceRoleDto)
-  spaceRole: CreateSpaceRoleDto[]
+  @Type(() => SpaceRoleDto)
+  spaceRole: SpaceRoleDto[]
 }

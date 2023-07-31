@@ -5,7 +5,7 @@ export enum Role {
   Admin = 'admin',
 }
 
-export class CreateSpaceRoleDto {
+export class SpaceRoleDto {
   @IsString()
   @IsNotEmpty()
   spaceRoleName: string
@@ -15,7 +15,7 @@ export class CreateSpaceRoleDto {
   Role: Role
 }
 
-export class ParticipationDto extends CreateSpaceRoleDto {
+export class ParticipationDto extends SpaceRoleDto {
   @IsString()
   @IsNotEmpty()
   code: string

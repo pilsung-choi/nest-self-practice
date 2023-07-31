@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,7 +13,7 @@ import {
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
 import { SpaceService } from './spaces.service'
 import { CreateSpaceDto } from './dtos/create-space.dto'
-import { ParticipationDto } from './dtos/space-role.dto'
+import { ParticipationDto, SpaceRoleDto } from './dtos/space-role.dto'
 
 @Controller('space')
 export class SpaceController {
@@ -65,29 +66,17 @@ export class SpaceController {
     return this.spaceService.joinSpace(id, participationDto)
   }
 
-  //   @Post('/join-room')
-  //   async joinRoom(@GetUser() user: User, @Param('code') code: string) {
-  //     const currentSpace = this.spaceService.find({
-  //       where: {
-  //         code,
-  //         spaceToUser: {
-  //           id: user.id,
-  //         },
-  //       },
-  //       relation: {
-  //         spaceToUser: true,
-  //       },
-  //     })
-  //     if (!currentSpace) {
-  //       return
-  //     }
-  //     if (!currentSpace.spaceToUser) {
-  //       return this.roleService.find({
-  //         where: {
-  //           id: currentSpace.id,
-  //         },
-  //       })
-  //     }
-  //     return this.spaceService.joinRoom()
-  //   }
+  //   2. 소유자는 관리자와 같은 역할을 공유하며, 관리자가 지닌 모든 권한을 갖습니다.
+  //   3. 이에 추가로 공간 구성원의 권한을 변경할 수 있는 권한 및 공간을 삭제할 수 있는 권한을 갖습니다.
+
+  // space 구성원의 권한을 변경 (소유자만)
+  @UseGuards(JwtAccessAuthGuard)
+  @Patch('')
+  async updateRoleFromOwner(
+    @Req() req: any,
+    @Body() updateRoleInfo: SpaceRoleDto,
+  ) {}
+  // space삭제 (소유자만)
+
+  // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.
 }
