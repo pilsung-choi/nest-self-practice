@@ -1,10 +1,12 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 import { SpaceToUser } from './spaceToUser.entity'
 import { SpaceParticipantRole } from './spaceParticipantRole.entity'
@@ -17,10 +19,10 @@ export class Space {
   @CreateDateColumn()
   createdAt: Date
 
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updatedAt: Date
 
-  @CreateDateColumn()
+  @DeleteDateColumn()
   deletedAt: Date
 
   @Column({

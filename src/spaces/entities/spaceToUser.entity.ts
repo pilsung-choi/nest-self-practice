@@ -1,11 +1,13 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 
 import { User } from 'users/entites/user.entity'
@@ -24,10 +26,10 @@ export class SpaceToUser {
   @CreateDateColumn()
   createdAt: Date
 
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updatedAt: Date
 
-  @CreateDateColumn()
+  @DeleteDateColumn()
   deletedAt: Date
 
   @Column({

@@ -1,11 +1,13 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 import { Space } from './space.entity'
 
@@ -22,10 +24,10 @@ export class SpaceAdminRole {
   @CreateDateColumn()
   createdAt: Date
 
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updatedAt: Date
 
-  @CreateDateColumn()
+  @DeleteDateColumn()
   deletedAt: Date
 
   @Column({ comment: '역할 이름' })

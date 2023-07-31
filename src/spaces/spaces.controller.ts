@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -85,6 +86,9 @@ export class SpaceController {
   }
 
   // space삭제 (소유자만)
+  @UseGuards(JwtAccessAuthGuard)
+  @Delete('')
+  async deleteSpace() {}
 
   // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.
 }
