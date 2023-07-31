@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common'
 import { nanoid } from 'nanoid'
@@ -11,9 +12,9 @@ import { SpaceToUser } from './entities/spaceToUser.entity'
 import { SpaceParticipantRole } from './entities/spaceParticipantRole.entity'
 import { Space } from './entities/space.entity'
 import { CreateSpaceDto } from './dtos/create-space.dto'
-import { ParticipationDto } from './dtos/participation.dto'
 import { ResponseType } from 'common/response-type'
 import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
+import { ParticipationDto } from './dtos/space-role.dto'
 
 @Injectable()
 export class SpaceService {
@@ -23,10 +24,11 @@ export class SpaceService {
     @InjectRepository(SpaceToUser)
     private spaceToUserRepo: Repository<SpaceToUser>,
     @InjectRepository(SpaceParticipantRole)
-    private spaceParticipantRole: Repository<SpaceParticipantRole>,
+    private spaceParticipantRoleRepo: Repository<SpaceParticipantRole>,
     @InjectRepository(SpaceAdminRole)
-    private spaceAdminRole: Repository<SpaceAdminRole>,
+    private spaceAdminRoleRepo: Repository<SpaceAdminRole>,
   ) {}
+  private readonly logger = new Logger('space')
 
   // 에러처리 해야함 space는 insert됨
   async createSpace(
@@ -67,24 +69,24 @@ export class SpaceService {
 
       await this.spaceToUserRepo.save(spaceToUserInfo)
 
-      const spaceRoleInfo = this.spaceParticipantRole.create()
+      const spaceRoleInfo = this.spaceParticipantRoleRepo.create()
       spaceRoleInfo.SpaceId = space.id
 
       createSpaceDto.spaceRole.map(async (spaceRole) => {
         let admin: SpaceAdminRole
         let participant: SpaceParticipantRole
         if (spaceRole.Role === 'admin') {
-          admin = this.spaceAdminRole.create()
+          admin = this.spaceAdminRoleRepo.create()
           admin.SpaceId = space.id
           admin.spaceRoleName = spaceRole.spaceRoleName
           admin.role = spaceRole.Role
-          await this.spaceAdminRole.save(admin)
+          await this.spaceAdminRoleRepo.save(admin)
         } else {
-          participant = this.spaceParticipantRole.create()
+          participant = this.spaceParticipantRoleRepo.create()
           participant.SpaceId = space.id
           participant.spaceRoleName = spaceRole.spaceRoleName
           participant.role = spaceRole.Role
-          await this.spaceParticipantRole.save(participant)
+          await this.spaceParticipantRoleRepo.save(participant)
         }
       })
       await queryRunner.commitTransaction()
@@ -110,17 +112,18 @@ export class SpaceService {
     return spaces
   }
 
-  async getRoleFromSpaceWithCode(code: string): Promise<ResponseType> {
+  // type 체크
+  async getRoleFromSpaceWithCode(code: string) {
     // 코드가 맞는 공간 가져오기
     const param = [code, code]
     const spaces = await getConnection().query(
       `
-    select sdr.spaceRoleName as name, sdr.role as role
+    select s.id, sdr.spaceRoleName as name, sdr.role as role
     from space s
     left join \`space-admin-role\` sdr on sdr.SpaceId = s.id
     where s.adminAccessCode = ?
     union
-    select spr.spaceRoleName as name, spr.role as role
+    select s.id, spr.spaceRoleName as name, spr.role as role
     from space s
     left join \`space-participant-role\` spr on spr.SpaceId = s.id
     where s.participantAccessCode = ?
@@ -134,8 +137,34 @@ export class SpaceService {
     return spaces
   }
 
-  async joinSpace(id: string, pInfo: ParticipationDto) {
-    //
+  async joinSpace(userId: string, pInfo: ParticipationDto) {
+    // 1.code로 space를 찾고 code가 admin이면 adminrole에있는 이름인지 확인
+    // 2. 확인하면 spacetouser에 insert
+    const foundRoleFromCode = await this.getRoleFromSpaceWithCode(pInfo.code)
+
+    if (foundRoleFromCode.length === 0) {
+      throw new NotFoundException('유효하지 않은 코드입니다.')
+    }
+    try {
+      const check = foundRoleFromCode.map((role) => {
+        // 만약 role의 이름과 역할에서 pinfo가 맞지 않는다면 해당 코드에 유효한 역할이 아닙니다
+        return role.name === pInfo.spaceRoleName && role.Role === pInfo.Role
+      })
+
+      if (check.length === 0) {
+        throw new Error('해당 코드에 맞는 역할과 이름이 아닙니다.')
+      }
+
+      const STU = this.spaceToUserRepo.create()
+      STU.SpaceId = foundRoleFromCode[0].id
+      STU.UserId = +userId
+      STU.role = pInfo.Role
+      STU.spaceRoleNmae = pInfo.spaceRoleName
+      await this.spaceToUserRepo.save(STU)
+    } catch (err) {
+      this.logger.error('something went wrong')
+    }
+    return
   }
 
   private async checkCodeFromSpace(
@@ -155,13 +184,3 @@ export class SpaceService {
       .getOne()
   }
 }
-
-// SELECT
-// CASE
-//     WHEN s.adminAccessCode = 'w73Jh9Yc' THEN sr_admin.spaceRoleName
-//     WHEN s.participantAccessCode = 'w73Jh9Yc' THEN sr_participant.spaceRoleName
-// END AS result
-// FROM space s
-// LEFT JOIN `space-role` sr_admin ON sr_admin.SpaceId = s.id AND sr_admin.role = 'admin'
-// LEFT JOIN `space-role` sr_participant ON sr_participant.SpaceId = s.id AND sr_participant.role = 'participant'
-// WHERE s.adminAccessCode = 'w73Jh9Yc' OR s.participantAccessCode = 'w73Jh9Yc' ;

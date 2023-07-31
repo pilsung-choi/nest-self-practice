@@ -8,10 +8,11 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common'
+
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
-import { CreateSpaceDto } from './dtos/create-space.dto'
 import { SpaceService } from './spaces.service'
-import { ParticipationDto } from './dtos/participation.dto'
+import { CreateSpaceDto } from './dtos/create-space.dto'
+import { ParticipationDto } from './dtos/space-role.dto'
 
 @Controller('space')
 export class SpaceController {

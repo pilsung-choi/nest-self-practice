@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsNotEmpty, IsString } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator'
 
 export enum Role {
   Participant = 'participant',
@@ -13,4 +13,10 @@ export class CreateSpaceRoleDto {
   @IsNotEmpty()
   @IsEnum(Role)
   Role: Role
+}
+
+export class ParticipationDto extends CreateSpaceRoleDto {
+  @IsString()
+  @IsNotEmpty()
+  code: string
 }
