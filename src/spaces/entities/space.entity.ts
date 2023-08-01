@@ -10,6 +10,7 @@ import {
 } from 'typeorm'
 import { SpaceToUser } from './spaceToUser.entity'
 import { SpaceParticipantRole } from './spaceParticipantRole.entity'
+import { SpaceAdminRole } from './spaceAdminRole.entity'
 
 @Entity({ schema: 'classum', name: 'space' })
 export class Space {
@@ -41,11 +42,20 @@ export class Space {
   @Column({ comment: '참여자용 입장코드', unique: true, select: false })
   participantAccessCode: string
 
-  @OneToMany(() => SpaceToUser, (spaceToUser) => spaceToUser.SpaceId)
+  @OneToMany(() => SpaceToUser, (spaceToUser) => spaceToUser.id, {
+    onDelete: 'CASCADE',
+  })
   SpaceToUser: SpaceToUser
 
-  @OneToMany(() => SpaceParticipantRole, (spacePRole) => spacePRole.id)
+  @OneToMany(() => SpaceParticipantRole, (spacePRole) => spacePRole.id, {
+    onDelete: 'CASCADE',
+  })
   SpacePRole: SpaceParticipantRole
+
+  @OneToMany(() => SpaceAdminRole, (spaceARole) => spaceARole.id, {
+    onDelete: 'CASCADE',
+  })
+  SpaceARole: SpaceAdminRole
 
   // @OneToMany(() => Post, (post) => post.id)
   // 매핑 테이블

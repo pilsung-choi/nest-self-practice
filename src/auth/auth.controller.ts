@@ -14,7 +14,7 @@ import { SignupDto } from './dtos/signup.dto'
 import { User } from 'users/entites/user.entity'
 import { RefreshTokenDto } from './dtos/refresh-token.dto'
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
-import { GetUser } from 'users/users.decorator'
+import { GetUser } from 'users/decorator/users.decorator'
 
 @Controller('/auth')
 export class AuthController {

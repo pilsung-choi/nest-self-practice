@@ -129,7 +129,7 @@ export class SpaceService {
     FROM space s
     LEFT JOIN \`space-admin-role\` sdr ON sdr.SpaceId = s.id
     WHERE s.adminAccessCode = ?
-    uniON
+    UNION
     SELECT s.id, spr.spaceRoleName AS name, spr.role AS role
     FROM space s
     LEFT JOIN \`space-participant-role\` spr ON spr.SpaceId = s.id
@@ -209,16 +209,19 @@ export class SpaceService {
   }
 
   // 쿼리 개션 가능한가?
-  async deleteSpace(id: number, spaceId: deleteSpaceDto) {
+  async deleteSpace(id: number, spaceId: number) {
     // 1.  해당 유저가 소유자인지 확인
     // 2. 소유자가 아니면 에러
     // 3. 해당 space와 spaceRole,spaceToUser soft delete
-    const { owner } = await this.spaceToUserRepo
-      .createQueryBuilder('spaceToUser')
-      .where('spaceToUser.UserId = :userId', { userId: id })
-      .andWhere('spaceToUser.SpaceId = :spaceId', { spaceId: spaceId.spaceId })
-      .select('spaceToUser.owner')
-      .getOne()
+    const { owner } =
+      (await this.spaceToUserRepo
+        .createQueryBuilder('spaceToUser')
+        .where('spaceToUser.UserId = :userId', { userId: id })
+        .andWhere('spaceToUser.SpaceId = :spaceId', {
+          spaceId,
+        })
+        .select('spaceToUser.owner')
+        .getOne()) || {}
 
     if (!owner) {
       throw new HttpException(
@@ -226,14 +229,15 @@ export class SpaceService {
         HttpStatus.FORBIDDEN,
       )
     }
-    const param = [spaceId.spaceId]
-    const deleteRes = await getConnection().query(
+
+    const param = [spaceId]
+    await getConnection().query(
       `
       UPDATE space AS s
       LEFT JOIN \`space-admin-role\` AS sar ON sar.SpaceId = s.id
       LEFT JOIN \`space-participant-role\` AS spr ON spr.SpaceId = s.id
       LEFT JOIN \`space-to-user\` AS stu ON stu.SpaceId = s.id
-      SET 
+      SET
       s.deletedAt = now(),
       sar.deletedAt = now(),
       spr.deletedAt = now(),
@@ -243,16 +247,6 @@ export class SpaceService {
       param,
     )
 
-    // 트랜잭션 걸어야 하나?
-    // "data": {
-    //   "fieldCount": 0,
-    //   "affectedRows": 6,
-    //   "insertId": 0,
-    //   "info": "Rows matched: 6  Changed: 6  Warnings: 0",
-    //   "serverStatus": 2,
-    //   "warningStatus": 0,
-    //   "changedRows": 6
-    // },
     return '성공적으로 삭제'
   }
 
