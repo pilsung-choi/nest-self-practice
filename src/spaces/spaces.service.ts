@@ -200,7 +200,7 @@ export class SpaceService {
         role: updateInfo.Role,
         updatedAt: () => 'NOW()',
       })
-      .where('`space-to-user`.UserId = :UserId', { UserId: updateInfo.userId })
+      .where('`space-to-user`.UserId = :serId', { UserId: updateInfo.userId })
       .andWhere('`space-to-user`.SpaceId = :spaceId', {
         spaceId: updateInfo.spaceId,
       })

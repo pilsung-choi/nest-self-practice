@@ -4,15 +4,14 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { User } from 'users/entites/user.entity'
-import { Repository } from 'typeorm'
 import bcrypt from 'bcrypt'
-import { UserService } from 'users/users.service'
-import { LoginDto } from './dtos/login.dto'
-import { Payload } from './payload/payload.interface'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
+
+import { User } from 'users/entites/user.entity'
+import { UserService } from 'users/users.service'
+import { Payload } from './payload/payload.interface'
+import { LoginDto } from './dtos/login.dto'
 import { RefreshTokenDto } from './dtos/refresh-token.dto'
 
 @Injectable()
@@ -23,6 +22,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  // email, password를 받아 해당유져가 유효한지 확인
   async validateUser(loginDto: LoginDto): Promise<any> {
     const user = await this.userService.findUserByEmail(loginDto.email)
     if (!user) {
@@ -36,6 +36,7 @@ export class AuthService {
     return user
   }
 
+  // 엑세스토큰 발급
   async generateAccessToken(user: User): Promise<string> {
     const payload: Payload = {
       id: user.id,
@@ -46,6 +47,7 @@ export class AuthService {
     return this.jwtService.signAsync(payload)
   }
 
+  // 리프레쉬토큰 발급
   async generateRefreshToken(user: User): Promise<string> {
     const payload: Payload = {
       id: user.id,
@@ -89,12 +91,5 @@ export class AuthService {
     const accessToken = await this.generateAccessToken(user)
 
     return { accessToken }
-  }
-
-  async login(user: any) {
-    const payload = { email: user.email, sub: user.userId }
-    return {
-      // access_token: this.jwtService.sign(payload),
-    }
   }
 }

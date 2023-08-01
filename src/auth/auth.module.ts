@@ -1,12 +1,13 @@
 import { Module, forwardRef } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { User } from 'users/entites/user.entity'
+import { JwtModule } from '@nestjs/jwt'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+
+import { UserModule } from 'users/users.module'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { UserService } from 'users/users.service'
-import { JwtModule, JwtService } from '@nestjs/jwt'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { UserModule } from 'users/users.module'
+import { User } from 'users/entites/user.entity'
 import { JwtRefreshStrategy } from './jwt-refresh.strategy'
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
 import { JwtRefreshGuard } from './jwt-refresh.guard'
@@ -18,7 +19,6 @@ import { JwtRefreshGuard } from './jwt-refresh.guard'
       global: true,
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        console.log(configService.get<string>('JWT_ACCESS_SECRET'))
         return {
           secret: configService.get<string>('JWT_ACCESS_SECRET'),
           signOptions: {
@@ -28,7 +28,7 @@ import { JwtRefreshGuard } from './jwt-refresh.guard'
       },
       inject: [ConfigService],
     }),
-    forwardRef(() => UserModule),
+    forwardRef(() => UserModule), //In order to resolve circular dependencies between modules, use the same forwardRef()
   ],
   providers: [
     UserService,

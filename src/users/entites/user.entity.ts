@@ -54,7 +54,4 @@ export class User {
 
   @Column({ nullable: true })
   currentRefreshToken: string
-
-  @Column({ type: 'datetime', nullable: true })
-  currentRefreshTokenExp: Date
 }

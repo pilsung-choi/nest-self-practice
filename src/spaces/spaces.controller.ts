@@ -21,6 +21,7 @@ import {
 } from './dtos/space-role.dto'
 import { deleteSpaceDto } from './dtos/delete-space.dto'
 
+@UseGuards(JwtAccessAuthGuard)
 @Controller('space')
 export class SpaceController {
   constructor(private readonly spaceService: SpaceService) {}
@@ -38,7 +39,6 @@ export class SpaceController {
   //     2. 유저는 입장 코드를 통해 공간에 참여할 수 있습니다. 이 때 권한은 사용한 코드에 따라 결정됩니다.
 
   // 공간 계설 -> 1.1참고
-  @UseGuards(JwtAccessAuthGuard)
   @Post('')
   async createSpacet(@Req() req: any, @Body() createSpaceDto: CreateSpaceDto) {
     const { id } = req.user
@@ -47,7 +47,6 @@ export class SpaceController {
   }
 
   // 해당 유저가 속해있는 space조회
-  @UseGuards(JwtAccessAuthGuard)
   @Get('/myspace')
   async getMySpaces(@Req() req: any) {
     const { id } = req.user
@@ -56,13 +55,10 @@ export class SpaceController {
   }
 
   // code입력 후, 해당 권한에 맞는 역할 조회
-  @UseGuards(JwtAccessAuthGuard)
   @Get('')
   async checkRoleFromCode(@Query('code') code: string) {
     return this.spaceService.getRoleFromSpaceWithCode(code)
   }
-
-  @UseGuards(JwtAccessAuthGuard)
   @Post('/participation')
   async participateSpace(
     @Req() req: any,
@@ -76,7 +72,6 @@ export class SpaceController {
   //   3. 이에 추가로 공간 구성원의 권한을 변경할 수 있는 권한 및 공간을 삭제할 수 있는 권한을 갖습니다.
 
   // space 구성원의 권한을 변경 (소유자만)
-  @UseGuards(JwtAccessAuthGuard)
   @Patch('')
   async updateRoleFromOwner(
     @Req() req: any,
@@ -87,7 +82,6 @@ export class SpaceController {
   }
 
   // space삭제 (소유자만)
-  @UseGuards(JwtAccessAuthGuard)
   @Delete('/:spaceId')
   async deleteSpace(@Req() req: any, @Param() spaceId: deleteSpaceDto) {
     const { id } = req.user
@@ -96,7 +90,6 @@ export class SpaceController {
   }
 
   // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.
-  @UseGuards(JwtAccessAuthGuard)
   @Patch('/owner')
   async updateOwnerFromOwner(
     @Req() req: any,

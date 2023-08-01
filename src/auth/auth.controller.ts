@@ -4,20 +4,17 @@ import {
   Controller,
   Get,
   Post,
-  Req,
-  Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
-import { LoginDto } from './dtos/login.dto'
-import { Response } from 'express'
+
 import { AuthService } from './auth.service'
 import { UserService } from 'users/users.service'
-import { User } from 'users/entites/user.entity'
-import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
-import { RefreshTokenDto } from './dtos/refresh-token.dto'
-import { JwtRefreshGuard } from './jwt-refresh.guard'
+import { LoginDto } from './dtos/login.dto'
 import { SignupDto } from './dtos/signup.dto'
+import { User } from 'users/entites/user.entity'
+import { RefreshTokenDto } from './dtos/refresh-token.dto'
+import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
+import { GetUser } from 'users/users.decorator'
 
 @Controller('/auth')
 export class AuthController {
@@ -41,10 +38,7 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(
-    @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<any> {
+  async login(@Body() loginDto: LoginDto): Promise<any> {
     // 이메일 비번 확인 후 반환
     const user = await this.authService.validateUser(loginDto)
 
@@ -54,13 +48,6 @@ export class AuthController {
     // 유저 객체에 refresh-token 데이터 저장
     await this.userService.setCurrentRefreshToken(refresh_token, user.id)
 
-    res.setHeader('Authorization', 'Bearer ' + [access_token, refresh_token])
-    res.cookie('access_token', access_token, {
-      httpOnly: true,
-    })
-    res.cookie('refresh_token', refresh_token, {
-      httpOnly: true,
-    })
     return {
       message: 'login success',
       access_token: access_token,
@@ -69,41 +56,25 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtRefreshGuard)
-  async logout(@Req() req: any, @Res() res: Response): Promise<any> {
-    //
-    await this.userService.removeRefreshToken(req.user.id)
-    res.clearCookie('access_token')
-    res.clearCookie('refresh_token')
-    return res.send({
+  @UseGuards(JwtAccessAuthGuard)
+  async logout(@GetUser() user: User) {
+    const { id } = user
+    await this.userService.removeRefreshToken(id)
+
+    return {
       message: 'logout success',
-    })
+    }
   }
 
   @Get('authenticate')
   @UseGuards(JwtAccessAuthGuard)
-  async user(@Req() req: any, @Res() res: Response): Promise<any> {
-    const userId: number = req.user.id
-    console.log(req)
-    const verifiedUser: User = await this.userService.findUserById(userId)
-    return res.send(verifiedUser)
+  async user(@GetUser() user: User) {
+    const { id } = user
+    return this.userService.findUserById(id)
   }
 
   @Post('refresh')
-  async refresh(
-    @Body() refreshTokenDto: RefreshTokenDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    try {
-      const newAccessToken = (await this.authService.refresh(refreshTokenDto))
-        .accessToken
-      res.setHeader('Authorization', 'Bearer ' + newAccessToken)
-      res.cookie('access_token', newAccessToken, {
-        httpOnly: true,
-      })
-      res.send({ newAccessToken })
-    } catch (err) {
-      throw new UnauthorizedException('Invalid refresh-token')
-    }
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refresh(refreshTokenDto)
   }
 }

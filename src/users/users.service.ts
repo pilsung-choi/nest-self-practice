@@ -25,25 +25,13 @@ export class UserService {
     return currentRefreshToken
   }
 
-  async getCurrentRefreshTokenExp(): Promise<Date> {
-    const currentDate = new Date()
-    // Date 형식으로 데이터베이스에 저장하기 위해 문자열을 숫자 타입으로 변환 (paresInt)
-
-    const currentRefreshTokenExp = new Date(
-      currentDate.getTime() +
-        parseInt(this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME')),
-    )
-    return currentRefreshTokenExp
-  }
-
+  //
   async setCurrentRefreshToken(refreshToken: string, userId: number) {
     const currentRefreshToken = await this.getCurrentHashedRefreshToken(
       refreshToken,
     )
-    const currentRefreshTokenExp = await this.getCurrentRefreshTokenExp()
     await this.userRepo.update(userId, {
       currentRefreshToken: currentRefreshToken,
-      currentRefreshTokenExp: currentRefreshTokenExp,
     })
   }
 
@@ -71,9 +59,8 @@ export class UserService {
   }
 
   async removeRefreshToken(userId: number): Promise<any> {
-    return await this.userRepo.update(userId, {
+    return this.userRepo.update(userId, {
       currentRefreshToken: null,
-      currentRefreshTokenExp: null,
     })
   }
 
@@ -91,14 +78,14 @@ export class UserService {
     user.lastName = signupDto.lastName
     user.profile = signupDto.profile
 
-    return await this.userRepo.save(user)
+    return this.userRepo.save(user)
   }
 
   async findUserByEmail(email: string) {
-    return await this.userRepo.findOne({ email })
+    return this.userRepo.findOne({ email })
   }
 
   async findUserById(id: number) {
-    return await this.userRepo.findOne({ id })
+    return this.userRepo.findOne({ id })
   }
 }

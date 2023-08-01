@@ -54,7 +54,6 @@ import { SpaceAdminRole } from 'spaces/entities/spaceAdminRole.entity'
         SpaceAdminRole,
         SpaceToUser,
       ],
-      //entities: ['src/**/*/entity.ts'],
     }),
     UserModule,
     AuthModule,
