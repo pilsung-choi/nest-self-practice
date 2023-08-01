@@ -1,19 +1,21 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { AppService } from './app.service'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { APP_FILTER } from '@nestjs/core'
 import Joi from 'joi'
-import { LoggerMiddleware } from 'logger/logger.middleware'
-import { User } from 'users/entites/user.entity'
+
 import { UserModule } from 'users/users.module'
 import { AuthModule } from 'auth/auth.module'
-import { Space } from 'spaces/entities/space.entity'
-import { SpaceParticipantRole } from 'spaces/entities/spaceParticipantRole.entity'
-import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
 import { SpaceModule } from 'spaces/spaces.module'
-import { JwtModule } from '@nestjs/jwt'
 import { CommonModule } from './common/common.module'
+import { AppService } from './app.service'
+import { LoggerMiddleware } from 'logger/logger.middleware'
+import { AllExceptionsFilter } from 'filter/exception-filter'
+import { SpaceParticipantRole } from 'spaces/entities/spaceParticipantRole.entity'
 import { SpaceAdminRole } from 'spaces/entities/spaceAdminRole.entity'
+import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
+import { Space } from 'spaces/entities/space.entity'
+import { User } from 'users/entites/user.entity'
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,11 +40,11 @@ import { SpaceAdminRole } from 'spaces/entities/spaceAdminRole.entity'
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: '127.0.0.1',
-      port: 3306,
+      type: process.env.DB_TYPE,
+      host: process.env.DB_HOST,
+      port: +process.env.DB_PORT,
       username: process.env.DB_USER,
-      password: 'cps159753',
+      password: process.env.DB_PWD,
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
@@ -61,7 +63,10 @@ import { SpaceAdminRole } from 'spaces/entities/spaceAdminRole.entity'
     CommonModule,
   ],
 
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+  ],
 })
 export class AppModule implements NestModule {
   constructor(private readonly configService: ConfigService) {}
