@@ -144,7 +144,7 @@ export class SpaceService {
     return spaces
   }
 
-  async joinSpace(userId: string, pInfo: ParticipationDto) {
+  async joinSpace(userId: number, pInfo: ParticipationDto) {
     // 1.code로 space를 찾고 code가 admin이면 adminrole에있는 이름인지 확인
     // 2. 확인하면 spacetouser에 insert
     const foundRoleFromCode = await this.getRoleFromSpaceWithCode(pInfo.code)
@@ -164,7 +164,7 @@ export class SpaceService {
 
       const STU = this.spaceToUserRepo.create()
       STU.SpaceId = foundRoleFromCode[0].id
-      STU.UserId = +userId
+      STU.UserId = userId
       STU.role = pInfo.Role
       STU.spaceRoleNmae = pInfo.spaceRoleName
       await this.spaceToUserRepo.save(STU)
@@ -174,7 +174,7 @@ export class SpaceService {
     return
   }
 
-  async updateRole(id: string, updateInfo: UpdateRoleFromOwnerDto) {
+  async updateRole(id: number, updateInfo: UpdateRoleFromOwnerDto) {
     // 1. 해당 유저가 소유자인지 확인한다.
     // 2. 소유자가 맞다면 update의 id에 해당하는 유저의 Role을 수정
     const checkOwner = await this.spaceToUserRepo

@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common'
 
 import { JwtAccessAuthGuard } from 'auth/jwt-access.guard'
+import { GetUser } from 'users/decorator/users.decorator'
 import { SpaceService } from './spaces.service'
 import { CreateSpaceDto } from './dtos/create-space.dto'
 import {
@@ -19,8 +20,6 @@ import {
   UpdateRoleFromOwnerDto,
   UpdateUserToOwnerDto,
 } from './dtos/space-role.dto'
-import { deleteSpaceDto } from './dtos/delete-space.dto'
-import { GetUser } from 'users/decorator/users.decorator'
 import { User } from 'users/entites/user.entity'
 
 @UseGuards(JwtAccessAuthGuard)
@@ -42,16 +41,19 @@ export class SpaceController {
 
   // 공간 계설 -> 1.1참고
   @Post('')
-  async createSpacet(@Req() req: any, @Body() createSpaceDto: CreateSpaceDto) {
-    const { id } = req.user
+  async createSpacet(
+    @GetUser() user: User,
+    @Body() createSpaceDto: CreateSpaceDto,
+  ) {
+    const { id } = user
 
     return this.spaceService.createSpace(createSpaceDto, id)
   }
 
   // 해당 유저가 속해있는 space조회
   @Get('/myspace')
-  async getMySpaces(@Req() req: any) {
-    const { id } = req.user
+  async getMySpaces(@GetUser() user: User) {
+    const { id } = user
 
     return this.spaceService.getMySpacesfromId(id)
   }
@@ -61,12 +63,13 @@ export class SpaceController {
   async checkRoleFromCode(@Query('code') code: string) {
     return this.spaceService.getRoleFromSpaceWithCode(code)
   }
+
   @Post('/participation')
   async participateSpace(
-    @Req() req: any,
+    @GetUser() user: User,
     @Body() participationDto: ParticipationDto,
   ) {
-    const { id } = req.user
+    const { id } = user
     return this.spaceService.joinSpace(id, participationDto)
   }
 
@@ -76,10 +79,10 @@ export class SpaceController {
   // space 구성원의 권한을 변경 (소유자만)
   @Patch('')
   async updateRoleFromOwner(
-    @Req() req: any,
+    @GetUser() user: User,
     @Body() updateRoleInfo: UpdateRoleFromOwnerDto,
   ) {
-    const { id } = req.user
+    const { id } = user
     return this.spaceService.updateRole(id, updateRoleInfo)
   }
 
@@ -93,10 +96,10 @@ export class SpaceController {
   // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.
   @Patch('/owner')
   async updateOwnerFromOwner(
-    @Req() req: any,
+    @GetUser() user: User,
     @Body() targetUser: UpdateUserToOwnerDto,
   ) {
-    const { id } = req.user
+    const { id } = user
     return this.spaceService.updateOwner(id, targetUser)
   }
 }
