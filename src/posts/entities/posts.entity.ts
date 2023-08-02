@@ -12,8 +12,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
+import { User } from 'users/entites/user.entity'
 
-export enum Type {
+export enum Types {
   Notification = 'notification',
   Question = 'question',
 }
@@ -33,26 +34,29 @@ export class Post {
   deletedAt: Date
 
   @Column('text', { comment: '파일 혹은 이미지', nullable: true })
-  content: string
+  file: string
 
   @Column('text', { comment: '게시글' })
-  post: string
+  content: string
 
   @Column({
     type: 'enum',
-    enum: Type,
+    enum: Types,
     comment: '해당 post의 타입 (공지, 질문)',
     nullable: true,
   })
-  type: Type
+  type: Types
+
+  @Column({ comment: '작성자 이름', nullable: true })
+  writer: string
 
   @Index()
-  @Column('int', { comment: '계시글 올린 유저 이름', select: false })
+  @Column('int', { comment: '계시글 올린 유저', select: false })
   WriterId: number
 
-  @ManyToOne(() => SpaceToUser, (spaceToUser) => spaceToUser.id)
+  @ManyToOne(() => User, (spaceToUser) => spaceToUser.id)
   @JoinColumn({ name: 'WriterId', referencedColumnName: 'id' })
-  Writer: SpaceToUser[]
+  Writer: User
 
   @Index()
   @Column('int', { name: 'SpaceId' })
