@@ -11,6 +11,7 @@ import {
 import { SpaceToUser } from './spaceToUser.entity'
 import { SpaceParticipantRole } from './spaceParticipantRole.entity'
 import { SpaceAdminRole } from './spaceAdminRole.entity'
+import { Post } from 'posts/entities/posts.entity'
 
 @Entity({ schema: 'classum', name: 'space' })
 export class Space {
@@ -57,6 +58,8 @@ export class Space {
   })
   SpaceARole: SpaceAdminRole
 
-  // @OneToMany(() => Post, (post) => post.id)
-  // 매핑 테이블
+  @OneToMany(() => Post, (post) => post.id, {
+    onDelete: 'CASCADE',
+  })
+  Post: Post
 }

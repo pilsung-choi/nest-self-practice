@@ -18,6 +18,7 @@ import { SpaceAdminRole } from 'spaces/entities/spaceAdminRole.entity'
 import { SpaceToUser } from 'spaces/entities/spaceToUser.entity'
 import { Space } from 'spaces/entities/space.entity'
 import { User } from 'users/entites/user.entity'
+import { Post } from 'posts/entities/posts.entity'
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -57,6 +58,7 @@ import { User } from 'users/entites/user.entity'
         SpaceAdminRole,
         SpaceAdminRole,
         SpaceToUser,
+        Post,
       ],
     }),
     UserModule,

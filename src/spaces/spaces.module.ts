@@ -11,6 +11,7 @@ import { AuthModule } from 'auth/auth.module'
 import { JwtModule, JwtService } from '@nestjs/jwt'
 import { SpaceService } from './spaces.service'
 import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
+import { Post } from 'posts/entities/posts.entity'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
       SpaceParticipantRole,
       SpaceAdminRole,
       SpaceToUser,
+      Post,
     ]),
     AuthModule,
   ],
