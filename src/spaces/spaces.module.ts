@@ -24,6 +24,6 @@ import { SpaceAdminRole } from './entities/spaceAdminRole.entity'
   ],
   providers: [SpaceService],
   controllers: [SpaceController],
-  exports: [],
+  exports: [SpaceService],
 })
 export class SpaceModule {}

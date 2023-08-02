@@ -4,10 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { APP_FILTER } from '@nestjs/core'
 import Joi from 'joi'
 
+import { CommonModule } from './common/common.module'
+import { PostsModule } from './posts/posts.module'
+import { ChatsModule } from './chats/chats.module'
+import { SpaceModule } from 'spaces/spaces.module'
 import { UserModule } from 'users/users.module'
 import { AuthModule } from 'auth/auth.module'
-import { SpaceModule } from 'spaces/spaces.module'
-import { CommonModule } from './common/common.module'
 import { AppService } from './app.service'
 import { LoggerMiddleware } from 'logger/logger.middleware'
 import { AllExceptionsFilter } from 'filter/exception-filter'
@@ -61,6 +63,8 @@ import { User } from 'users/entites/user.entity'
     AuthModule,
     SpaceModule,
     CommonModule,
+    PostsModule,
+    ChatsModule,
   ],
 
   providers: [
