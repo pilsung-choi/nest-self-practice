@@ -8,7 +8,6 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
@@ -56,7 +55,7 @@ export class Post {
 
   @ManyToOne(() => User, (spaceToUser) => spaceToUser.id)
   @JoinColumn({ name: 'WriterId', referencedColumnName: 'id' })
-  Writer: User
+  Writer: User[]
 
   @Index()
   @Column('int', { name: 'SpaceId' })

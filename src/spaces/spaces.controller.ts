@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -88,9 +89,12 @@ export class SpaceController {
 
   // space삭제 (소유자만)
   @Delete('/:spaceId')
-  async deleteSpace(@GetUser() user: User, @Param('spaceId') spaceId: string) {
+  async deleteSpace(
+    @GetUser() user: User,
+    @Param('spaceId', ParseIntPipe) spaceId: number,
+  ) {
     const { id } = user
-    return this.spaceService.deleteSpace(id, +spaceId)
+    return this.spaceService.deleteSpace(id, spaceId)
   }
 
   // 4. 소유자는 다른 구성원을 소유자로 임명할 수 있습니다.

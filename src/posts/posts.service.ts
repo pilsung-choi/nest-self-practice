@@ -22,15 +22,11 @@ export class PostsService {
   ) {
     const { id, firstName, lastName } = user
     const { content, type, spaceId } = postInfo
-    // 1. type이 공지면 spaceToUser의 role가 관리자인지 확인
-    if (type === 'notification') {
-      const userInfo = await this.spaceToUserRepo
-        .createQueryBuilder('spaceToUser')
-        .where('spaceToUser.UserId = :userId', { userId: id })
-        .andWhere('spaceToUser.SpaceId = :spaceId', { spaceId })
-        .getOne()
+    //   4. 관리자는 "공지"와 “질문”을 모두 작성할 수 있고, 참여자는 "질문"만 작성할 수 있습니다.
+    const userInfo = await this.checkOwnerOrAdmin(id, spaceId)
 
-      if (userInfo.owner === true || userInfo.role === 'admin') {
+    if (type === 'notification') {
+      if (userInfo.owner || userInfo.role === 'admin') {
         const adminPost = this.postRepo.create()
         adminPost.file = filePath
         adminPost.content = content
@@ -50,7 +46,7 @@ export class PostsService {
       post.file = filePath
       post.content = content
       post.type = type
-      post.writer = lastName + firstName
+      post.writer = `${lastName}${firstName}`
       post.WriterId = id
       post.SpaceId = spaceId
       await this.postRepo.save(post)
@@ -64,25 +60,52 @@ export class PostsService {
   ) {
     const { id } = user
     const { content, type, spaceId } = postInfo
-    const userInfo = await this.spaceToUserRepo
-      .createQueryBuilder('spaceToUser')
-      .where('spaceToUser.UserId = :userId', { userId: id })
-      .andWhere('spaceToUser.SpaceId = :spaceId', { spaceId })
-      .getOne()
+    const userInfo = await this.checkOwnerOrAdmin(id, spaceId)
 
     if (!(userInfo.role === 'participant')) {
       throw new HttpException(
         '참여자만 익명으로 post를 작성할 수 있습니다.',
-        HttpStatus.FORBIDDEN,
+        HttpStatus.BAD_REQUEST,
       )
     }
     const post = this.postRepo.create()
     post.file = filePath
     post.content = content
     post.type = type
-    post.writer = ''
+    post.writer = 'anonymouse'
     post.WriterId = id
     post.SpaceId = spaceId
     await this.postRepo.save(post)
+  }
+  // 수정 필요
+  async getPosts(userId: number, spaceId: number) {
+    const userInfo = await this.checkOwnerOrAdmin(userId, spaceId)
+
+    const selectWriterId =
+      userInfo?.owner || userInfo?.role === 'admin' ? true : false
+    console.log(selectWriterId)
+    const postsQuery = this.postRepo
+      .createQueryBuilder('post')
+      .where('post.SpaceId = :spaceId', { spaceId })
+
+    if (selectWriterId) {
+      return await postsQuery.addSelect('post.WriterId').getMany()
+    }
+
+    return await postsQuery.getMany()
+  }
+
+  async deletePost(userId: number, spaceId: number, postId: number) {
+    //관리자 작성자만 삭제
+    const ownerOrAdmin = this.checkOwnerOrAdmin(userId, spaceId)
+    // await this.postRepo.createQueryBuilder('post')
+  }
+
+  async checkOwnerOrAdmin(userId: number, spaceId: number) {
+    return await this.spaceToUserRepo
+      .createQueryBuilder('spaceToUser')
+      .where('spaceToUser.UserId = :UserId', { UserId: userId })
+      .andWhere('spaceToUser.SpaceId = :SpaceId', { SpaceId: spaceId })
+      .getOne()
   }
 }
