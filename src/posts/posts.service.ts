@@ -22,7 +22,7 @@ export class PostsService {
   ) {
     const { id, firstName, lastName } = user
     const { content, type, spaceId } = postInfo
-    //   4. 관리자는 "공지"와 “질문”을 모두 작성할 수 있고, 참여자는 "질문"만 작성할 수 있습니다.
+
     const userInfo = await this.checkOwnerOrAdmin(id, spaceId)
 
     if (type === 'notification') {

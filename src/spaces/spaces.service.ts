@@ -37,7 +37,6 @@ export class SpaceService {
   ) {}
   private readonly logger = new Logger('space')
 
-  // 에러처리 해야함 space는 insert됨, 중복처리?
   async createSpace(
     createSpaceDto: CreateSpaceDto,
     id: number,
@@ -58,9 +57,6 @@ export class SpaceService {
     await queryRunner.startTransaction()
 
     try {
-      // 1. space를 만든다 0
-      // 2. spaceToUser 만든다 0
-      // 3. 역할에 따른 Role 만든다
       const spaceInfo = this.spaceRepo.create()
       spaceInfo.spaceName = createSpaceDto.spaceName
       spaceInfo.spaceLogo = createSpaceDto.spaceLogo
@@ -119,9 +115,7 @@ export class SpaceService {
     return spaces
   }
 
-  // type 체크
   async getRoleFromSpaceWithCode(code: string) {
-    // 코드가 맞는 공간 가져오기
     const param = [code, code]
     const spaces = await getConnection().query(
       `
@@ -145,8 +139,6 @@ export class SpaceService {
   }
 
   async joinSpace(userId: number, pInfo: ParticipationDto) {
-    // 1.code로 space를 찾고 code가 admin이면 adminrole에있는 이름인지 확인
-    // 2. 확인하면 spacetouser에 insert
     const foundRoleFromCode = await this.getRoleFromSpaceWithCode(pInfo.code)
 
     if (foundRoleFromCode.length === 0) {
@@ -175,8 +167,6 @@ export class SpaceService {
   }
 
   async updateRole(id: number, updateInfo: UpdateRoleFromOwnerDto) {
-    // 1. 해당 유저가 소유자인지 확인한다.
-    // 2. 소유자가 맞다면 update의 id에 해당하는 유저의 Role을 수정
     const checkOwner = await this.spaceToUserRepo
       .createQueryBuilder('spaceToUser')
       .where('spaceToUser.UserId = :userId', { userId: id })
@@ -208,11 +198,7 @@ export class SpaceService {
     return
   }
 
-  // 쿼리 개션 가능한가?
   async deleteSpace(id: number, spaceId: number) {
-    // 1.  해당 유저가 소유자인지 확인
-    // 2. 소유자가 아니면 에러
-    // 3. 해당 space와 spaceRole,spaceToUser soft delete
     const { owner } =
       (await this.spaceToUserRepo
         .createQueryBuilder('spaceToUser')
@@ -259,8 +245,6 @@ export class SpaceService {
       })
       .select('spaceToUser.owner')
       .getOne()
-    // 삭제된 space면 다른 에러를 던져야함
-    console.log(owner)
 
     if (!owner) {
       throw new HttpException(
@@ -282,7 +266,6 @@ export class SpaceService {
       })
       .execute()
 
-    // 변경이 안돼도 넘어감 에러처리 필요
     if (res.affected === 0) {
       throw new HttpException(
         '소유자로 변경된 유저가 없습니다',

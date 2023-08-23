@@ -15,9 +15,6 @@ export class UserService {
   ) {}
 
   async getCurrentHashedRefreshToken(refreshToken: string) {
-    // 토큰 값을 그대로 저장하기 보단, 암호화를 거쳐 데이터베이스에 저장한다.
-    // bcrypt는 단방향 해시 함수이므로 암호화된 값으로 원래 문자열을 유추할 수 없다.
-
     const currentRefreshToken = await bcrypt.hash(
       refreshToken,
       +this.configService.get<number>('SALT_OR_ROUNDS'),
